@@ -116,6 +116,8 @@ document.querySelectorAll('.user-item').forEach(item => {
 
 document.getElementById('sendButton').onclick = sendMessage;
 
-document.getElementById('messageInput').onkeypress = (e) => {
-    if (e.key === 'Enter') sendMessage();
+document.getElementById('messageInput').onkeypress = async (e) => {
+    if (e.key === 'Enter') {
+        await sendMessage();
+    }
 };
