@@ -25,11 +25,12 @@ async def register_user(user_data: SUserRegister) -> dict:
 
     if user_data.password != user_data.password_check:
         raise PasswordMismatchException("Пароли не совпадают")
-
+    print("приступаю к регитрации")
+    hashed_password = get_password_hash(user_data.password)
     await UsersDAO.add(
         name=user_data.name,
         email=user_data.email,
-        hashed_password=get_password_hash(user_data.password)
+        hashed_password=hashed_password
     )
 
     return {'message': 'Вы успешно зарегистрированы!'}

@@ -2,14 +2,12 @@ let selectedUserId = null;
 let socket = null;
 let messagePollingInterval = null;
 
-// Function to select a user and initiate the chat
-function selectUser(userId, userName) {
+async function selectUser(userId, userName, event) {
     selectedUserId = userId;
     document.getElementById('chatHeader').innerHTML = `<span>Чат с ${userName}</span><button class="logout-button" id="logoutButton">Выход</button>`;
     document.getElementById('messageInput').disabled = false;
     document.getElementById('sendButton').disabled = false;
 
-    // Clear previous active states
     document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
     event.target.classList.add('active');
 
@@ -17,33 +15,29 @@ function selectUser(userId, userName) {
     messagesContainer.innerHTML = '';
     messagesContainer.style.display = 'block';
 
-    // Set logout button action
     document.getElementById('logoutButton').onclick = logout;
 
-    // Load initial messages and establish WebSocket connection
-    loadMessages(userId);
+    await loadMessages(userId);
     connectWebSocket();
-    startMessagePolling(userId); // Start polling for messages
+    startMessagePolling(userId);
 }
 
-// Function to load messages from the server
-function loadMessages(userId) {
-    fetch(`/chat/messages/${userId}`)
-        .then(response => response.json())
-        .then(messages => {
-            const messagesContainer = document.getElementById('messages');
-            messagesContainer.innerHTML = '';
-            messages.forEach(message => {
-                addMessage(message.content, message.sender_id);
-            });
-        });
-}
+async function loadMessages(userId) {
+    try {
+        const response = await fetch(`/chat/messages/${userId}`);
+        const messages = await response.json();
 
-// Function to connect to WebSocket
-function connectWebSocket() {
-    if (socket) {
-        socket.close(); // Close previous connection if it exists
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.innerHTML = messages.map(message =>
+            createMessageElement(message.content, message.recipient_id)
+        ).join('');
+    } catch (error) {
+        console.error('Ошибка загрузки сообщений:', error);
     }
+}
+
+function connectWebSocket() {
+    if (socket) socket.close();
 
     socket = new WebSocket(`wss://${window.location.host}/chat/ws/${selectedUserId}`);
 
@@ -51,97 +45,77 @@ function connectWebSocket() {
 
     socket.onmessage = (event) => {
         const incomingMessage = JSON.parse(event.data);
-        // Check if the incoming message is for the currently selected user
         if (incomingMessage.recipient_id === selectedUserId) {
-            addMessage(incomingMessage.content, incomingMessage.sender_id);
+            addMessage(incomingMessage.content, incomingMessage.recipient_id);
         }
     };
 
-    socket.onclose = () => {
-        console.log('WebSocket соединение закрыто');
-        // Optionally, you can restart the WebSocket connection here
-        // setTimeout(connectWebSocket, 1000); // Reconnect after 1 second
-    };
+    socket.onclose = () => console.log('WebSocket соединение закрыто');
 }
 
-// Function to send a message
-function sendMessage() {
+async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const message = messageInput.value.trim();
+
     if (message && selectedUserId) {
-        const payload = {
-            recipient_id: selectedUserId,
-            content: message
-        };
-        fetch('/chat/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        })
-            .then(response => response.json())
-            .then(data => {
-                socket.send(JSON.stringify({content: message, recipient_id: selectedUserId}));
-                addMessage(message, 'sent');
-                messageInput.value = '';
+        const payload = {recipient_id: selectedUserId, content: message};
+
+        try {
+            await fetch('/chat/messages', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
             });
+
+            socket.send(JSON.stringify(payload));
+            addMessage(message, selectedUserId);
+            messageInput.value = '';
+        } catch (error) {
+            console.error('Ошибка при отправке сообщения:', error);
+        }
     }
 }
 
-// Function to add a message to the chat
-function addMessage(text, senderId) {
+function addMessage(text, recipient_id) {
     const messagesContainer = document.getElementById('messages');
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('message');
-    messageElement.classList.add('my-message');
-    messageElement.textContent = text;
-    messagesContainer.appendChild(messageElement);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the latest message
+    messagesContainer.insertAdjacentHTML('beforeend', createMessageElement(text, recipient_id));
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// Function to start polling for new messages
+function createMessageElement(text, recipient_id) {
+    const userID = parseInt(selectedUserId, 10);
+    const messageClass = userID === recipient_id ? 'my-message' : 'other-message';
+    return `<div class="message ${messageClass}">${text}</div>`;
+}
+
 function startMessagePolling(userId) {
-    // Clear any existing polling interval
-    if (messagePollingInterval) {
-        clearInterval(messagePollingInterval);
-    }
-
-    // Start a new polling interval
-    messagePollingInterval = setInterval(() => {
-        loadMessages(userId);
-    }, 5000); // Poll every 5 seconds
+    clearInterval(messagePollingInterval);
+    messagePollingInterval = setInterval(() => loadMessages(userId), 1000);
 }
 
-// Function to handle user item clicks
-document.querySelectorAll('.user-item').forEach(item => {
-    item.onclick = function () {
-        selectUser(item.getAttribute('data-user-id'), item.textContent);
-    };
-});
+async function logout() {
+    try {
+        const response = await fetch('/auth/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
 
-// Send message on button click
-document.getElementById('sendButton').onclick = sendMessage;
-
-// Send message on "Enter" key press
-document.getElementById('messageInput').onkeypress = (e) => {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
-};
-
-// Logout function
-function logout() {
-    fetch('/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-    }).then(response => {
         if (response.ok) {
             window.location.href = '/auth';
         } else {
             console.error('Ошибка при выходе');
         }
-    }).catch(error => {
+    } catch (error) {
         console.error('Ошибка при выполнении запроса:', error);
-    });
+    }
 }
+
+document.querySelectorAll('.user-item').forEach(item => {
+    item.onclick = event => selectUser(item.getAttribute('data-user-id'), item.textContent, event);
+});
+
+document.getElementById('sendButton').onclick = sendMessage;
+
+document.getElementById('messageInput').onkeypress = (e) => {
+    if (e.key === 'Enter') sendMessage();
+};

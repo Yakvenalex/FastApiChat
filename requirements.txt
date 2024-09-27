@@ -3,7 +3,7 @@ uvicorn
 sqlalchemy
 alembic
 pydantic
-bcrypt
+bcrypt==4.0.1
 passlib
 python-jose
 websockets

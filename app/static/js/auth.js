@@ -1,4 +1,3 @@
-// Привязка табов к кликам
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
         showTab(tab.getAttribute('data-tab'));
@@ -16,39 +15,30 @@ function showTab(tabName) {
     document.getElementById(`${tabName}Form`).classList.add('active');
 }
 
-// Обработка формы входа
-document.getElementById('loginButton').addEventListener('click', async (event) => {
-    event.preventDefault(); // Предотвращаем отправку формы по умолчанию
-    await handleLogin();
-});
+// Функция для валидации данных формы
+function validateForm(fields) {
+    return fields.every(field => field.trim() !== '');
+}
 
-// Обработка формы регистрации
-document.getElementById('registerButton').addEventListener('click', async (event) => {
-    event.preventDefault(); // Предотвращаем отправку формы по умолчанию
-    await handleRegister();
-});
-
-// Обработка входа
-async function handleLogin() {
-    const email = document.querySelector('#loginForm input[type="email"]').value;
-    const password = document.querySelector('#loginForm input[type="password"]').value;
-
+// Функция для отправки запросов
+async function sendRequest(url, data) {
     try {
-        const response = await fetch("login/", {
+        const response = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({email, password})
+            body: JSON.stringify(data)
         });
 
         if (response.ok) {
-            const data = await response.json();
-            alert(data.message || 'Авторизация успешна!');
-            window.location.href = '/chat';
+            const result = await response.json();
+            alert(result.message || 'Операция выполнена успешно!');
+            return result;
         } else {
             const errorData = await response.json();
-            alert(errorData.message || 'Ошибка авторизации!');
+            alert(errorData.message || 'Ошибка выполнения запроса!');
+            return null;
         }
     } catch (error) {
         console.error("Ошибка:", error);
@@ -56,32 +46,42 @@ async function handleLogin() {
     }
 }
 
-// Обработка регистрации
-async function handleRegister() {
+// Обработка формы входа
+document.getElementById('loginButton').addEventListener('click', async (event) => {
+    event.preventDefault();
+
+    const email = document.querySelector('#loginForm input[type="email"]').value;
+    const password = document.querySelector('#loginForm input[type="password"]').value;
+
+    if (!validateForm([email, password])) {
+        alert('Пожалуйста, заполните все поля.');
+        return;
+    }
+
+    const data = await sendRequest("login/", {email, password});
+    if (data) {
+        window.location.href = '/chat';
+    }
+});
+
+// Обработка формы регистрации
+document.getElementById('registerButton').addEventListener('click', async (event) => {
+    event.preventDefault();
+
     const email = document.querySelector('#registerForm input[type="email"]').value;
     const name = document.querySelector('#registerForm input[type="text"]').value;
     const password = document.querySelector('#registerForm input[type="password"]:nth-child(3)').value;
     const password_check = document.querySelector('#registerForm input[type="password"]:nth-child(4)').value;
 
-    try {
-        const response = await fetch("register/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({email, name, password, password_check})
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            alert(data.message || 'Вы успешно зарегистрированы!');
-            // Можно добавить логику редиректа
-        } else {
-            const errorData = await response.json();
-            alert(errorData.message || 'Ошибка регистрации!');
-        }
-    } catch (error) {
-        console.error("Ошибка:", error);
-        alert('Произошла ошибка на сервере');
+    if (!validateForm([email, name, password, password_check])) {
+        alert('Пожалуйста, заполните все поля.');
+        return;
     }
-}
+
+    if (password !== password_check) {
+        alert('Пароли не совпадают.');
+        return;
+    }
+
+    await sendRequest("register/", {email, name, password, password_check});
+});

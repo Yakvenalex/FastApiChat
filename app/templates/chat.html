@@ -9,10 +9,14 @@
 <body>
 <div class="chat-container">
     <div class="user-list" id="userList">
-        {% for user in users_all %}
-        <div class="user-item" data-user-id="{{ user.id }}">
-            {{ user.name }}
-        </div>
+        {% for chat in users_all %}
+            <div class="user-item" data-user-id="{{ chat.id }}">
+                {% if user.id == chat.id %}
+                    Избранное
+                {% else %}
+                    {{ chat.name }}
+                {% endif %}
+            </div>
         {% endfor %}
     </div>
     <div class="chat-area">
