@@ -1,0 +1,32 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мини-чат: Вход и Регистрация</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='styles/auth.css') }}">
+</head>
+<body>
+<div class="container">
+    <div class="tabs">
+        <div class="tab active" data-tab="login">Авторизация</div>
+        <div class="tab" data-tab="register">Регистрация</div>
+    </div>
+    <div class="content">
+        <form id="loginForm" class="form active">
+            <input type="email" placeholder="Email" required>
+            <input type="password" placeholder="Пароль" required>
+            <button id="loginButton" type="submit">Войти</button>
+        </form>
+        <form id="registerForm" class="form">
+            <input type="email" placeholder="Email" required>
+            <input type="text" placeholder="Имя" required>
+            <input type="password" placeholder="Пароль" required>
+            <input type="password" placeholder="Повторите пароль" required>
+            <button id="registerButton" type="submit">Зарегистрироваться</button>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', path='js/auth.js') }}"></script>
+</body>
+</html>

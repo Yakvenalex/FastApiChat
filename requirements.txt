@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+pydantic
+bcrypt
+passlib
+python-jose
+websockets
+aiosqlite
+pydantic_settings
+pydantic[email]
+jinja2

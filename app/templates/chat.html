@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мини-чат</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='styles/chat.css') }}">
+</head>
+<body>
+<div class="chat-container">
+    <div class="user-list" id="userList">
+        {% for user in users_all %}
+        <div class="user-item" data-user-id="{{ user.id }}">
+            {{ user.name }}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="chat-area">
+        <div class="chat-header" id="chatHeader">
+            <span>Мини-чат</span>
+            <button class="logout-button" id="logoutButton">Выход</button>
+        </div>
+        <div class="messages" id="messages">
+            <div class="welcome-message">Выберите чат для общения</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Введите сообщение..." disabled>
+            <button id="sendButton" disabled>Отправить</button>
+        </div>
+    </div>
+</div>
+<script src="{{ url_for('static', path='js/chat.js') }}"></script>
+</body>
+</html>
