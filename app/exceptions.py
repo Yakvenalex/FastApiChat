@@ -19,9 +19,6 @@ PasswordMismatchException = HTTPException(status_code=status.HTTP_409_CONFLICT, 
 IncorrectEmailOrPasswordException = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                                   detail='Неверная почта или пароль')
 
-# Создание пользовательских классов исключений
-
-
 NoJwtException = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                detail='Токен не валидный!')
 

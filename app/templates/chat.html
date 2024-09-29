@@ -4,25 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Мини-чат</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', path='styles/chat.css') }}">
+    <link rel="stylesheet" type="text/css" href="/static/styles/chat.css">
 </head>
 <body>
 <div class="chat-container">
     <div class="user-list" id="userList">
+        <!-- Добавляем фиксированный элемент "Избранное" -->
+        <div class="user-item" data-user-id="{{ user.id }}">
+            Избранное
+        </div>
+        <!-- Выводим остальных пользователей, исключая текущего пользователя -->
         {% for chat in users_all %}
-            <div class="user-item" data-user-id="{{ chat.id }}">
-                {% if user.id == chat.id %}
-                    Избранное
-                {% else %}
+            {% if chat.id != user.id %}
+                <div class="user-item" data-user-id="{{ chat.id }}">
                     {{ chat.name }}
-                {% endif %}
-            </div>
+                </div>
+            {% endif %}
         {% endfor %}
     </div>
     <div class="chat-area">
         <div class="chat-header" id="chatHeader">
             <span>Мини-чат</span>
-            <button class="logout-button" id="logoutButton">Выход</button>
+            <button class="logout-button" id="logoutButton" onclick="logout()">Выход</button>
         </div>
         <div class="messages" id="messages">
             <div class="welcome-message">Выберите чат для общения</div>
@@ -33,6 +36,12 @@
         </div>
     </div>
 </div>
-<script src="{{ url_for('static', path='js/chat.js') }}"></script>
+
+<script>
+    // Передаем идентификатор текущего пользователя в JavaScript
+    const currentUserId = parseInt("{{ user.id }}", 10);
+</script>
+
+<script src="/static/js/chat.js"></script>
 </body>
 </html>
