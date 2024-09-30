@@ -39,3 +39,14 @@
 
 ```bash
 pip install -r requirements.txt
+```
+
+### Выполнение миграций Alembic:
+
+```bash
+alembic upgrade head
+```
+### Запуск проекта:
+```bash
+uvicorn app.main:app
+```
